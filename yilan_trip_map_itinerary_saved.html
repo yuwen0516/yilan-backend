@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>宜蘭旅遊規劃地圖</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+  <style>
+    #map { height: 400px; border: 2px solid #ff9800; border-radius: 8px; }
+    .remove-btn { float: right; cursor: pointer; color: red; }
+  </style>
+</head>
+<body class="p-4">
+  <h3>🌏 宜蘭景點地圖規劃工具</h3>
+
+  <div class="mb-3">
+    <label for="day-selector" class="form-label"><strong>選擇加入天數：</strong></label>
+    <select id="day-selector" class="form-select" style="width: 150px;">
+      <option value="1">Day 1</option>
+      <option value="2">Day 2</option>
+      <option value="3">Day 3</option>
+    </select>
+  </div>
+
+  
+<div class="mb-3">
+  <h5>🔍 自訂景點加入行程</h5>
+  <input type="text" id="custom-place-name" class="form-control mb-2" placeholder="輸入景點名稱" />
+  <input type="text" id="custom-place-category" class="form-control mb-2" placeholder="輸入分類，如 自然景點、文化景點..." />
+  <button class="btn btn-success" onclick="addCustomPlace()">➕ 加入自訂景點</button>
+</div>
+<div id="map" class="mb-4"></div>
+
+  <h5>📝 已加入行程</h5>
+  <ul id="itinerary-list" class="list-group"></ul>
+
+<div class="mt-3">
+  <button class="btn btn-primary" onclick="saveItinerary()">💾 儲存行程</button>
+  <button class="btn btn-secondary" onclick="clearItinerary()">🗑️ 清除行程</button>
+</div>
+<hr/>
+<h5>📜 歷史行程紀錄</h5>
+<div id="history-list" class="mt-3"></div>
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const scheduleData = { 1: [], 2: [], 3: [] };
+
+let map;
+function initMap() {
+  map = L.map('map').setView([24.75, 121.75], 10);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  attractions.forEach((loc, index) => {
+    const popupHtml = `
+      <div>
+        <strong>${loc.name}</strong><br/>
+        <small>${loc.category}</small><br/>
+        <button class="btn btn-sm btn-primary mt-1" onclick="addPlaceFromMap(${index})">➕ 加入行程</button>
+      </div>
+    `;
+    L.marker([loc.lat, loc.lng])
+      .addTo(map)
+      .bindPopup(popupHtml);
+  });
+}
+
+const attractions = [
+      {"name": "蘭陽博物館", "lat": 24.8694, "lng": 121.8311, "category": "博物館"},
+    {"name": "五峰旗瀑布", "lat": 24.8278, "lng": 121.7728, "category": "自然景點"},
+    {"name": "羅東夜市", "lat": 24.6768, "lng": 121.7666, "category": "夜市美食"},
+    {"name": "龜山島", "lat": 24.8323, "lng": 121.9593, "category": "自然景點"},
+    {"name": "梅花湖", "lat": 24.6995, "lng": 121.7388, "category": "自然景點"},
+    {"name": "傳統藝術中心", "lat": 24.6853, "lng": 121.8322, "category": "文化景點"},
+    {"name": "礁溪溫泉", "lat": 24.8258, "lng": 121.7742, "category": "溫泉"},
+    {"name": "清水地熱", "lat": 24.7607, "lng": 121.6719, "category": "自然景點"},
+    {"name": "南方澳觀景台", "lat": 24.5945, "lng": 121.8530, "category": "景觀平台"},
+    {"name": "頭城老街", "lat": 24.8575, "lng": 121.8305, "category": "歷史景點"},
+    {"name": "宜蘭酒廠", "lat": 24.7510, "lng": 121.7554, "category": "文化景點"},
+    {"name": "冬山河親水公園", "lat": 24.6725, "lng": 121.7905, "category": "自然景點"},
+    {"name": "東門夜市", "lat": 24.7542, "lng": 121.7548, "category": "夜市美食"},
+    {"name": "佛光大學", "lat": 24.8189, "lng": 121.7189, "category": "學術建築"},
+    {"name": "宜蘭設治紀念館", "lat": 24.7541, "lng": 121.7561, "category": "歷史建築"},
+    {"name": "幾米公園", "lat": 24.7507, "lng": 121.7580, "category": "主題公園"},
+    {"name": "望龍埤", "lat": 24.7137, "lng": 121.7208, "category": "自然景點"},
+    {"name": "太平山森林遊樂區", "lat": 24.4862, "lng": 121.5323, "category": "自然景點"},
+    {"name": "三星蔥文化館", "lat": 24.6778, "lng": 121.6559, "category": "文化景點"},
+    {"name": "棲蘭森林遊樂區", "lat": 24.6027, "lng": 121.4835, "category": "自然景點"},
+    ];
+
+function addPlaceFromMap(index) {
+  const day = parseInt(document.getElementById('day-selector').value);
+  const loc = attractions[index];
+  const place = {
+    id: Date.now() + Math.random(),
+    name: loc.name,
+    category: loc.category,
+    note: '',
+    day: day
+  };
+  scheduleData[day].push(place);
+  renderItinerary();
+  map.closePopup();
+}
+
+function addCustomPlace() {
+  const name = document.getElementById('custom-place-name').value.trim();
+  const category = document.getElementById('custom-place-category').value.trim() || '未分類';
+  const day = parseInt(document.getElementById('day-selector').value);
+  if (!name) return alert('請輸入景點名稱');
+  scheduleData[day].push({
+    id: Date.now(),
+    name,
+    category,
+    note: '',
+    day
+  });
+  renderItinerary();
+}
+
+function renderItinerary() {
+  const list = document.getElementById("itinerary-list");
+  list.innerHTML = '';
+  for (let day = 1; day <= 3; day++) {
+    if (scheduleData[day].length > 0) {
+      const header = document.createElement('li');
+      header.className = 'list-group-item active';
+      header.textContent = `第 ${day} 天`;
+      list.appendChild(header);
+      scheduleData[day].forEach(p => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.textContent = `📍 ${p.name} (${p.category})`;
+        list.appendChild(li);
+      });
+    }
+  }
+}
+
+function saveItinerary() {
+  const name = prompt("請輸入行程名稱");
+  if (!name) return alert("❌ 請輸入行程名稱");
+
+  const payload = {
+    name: name,
+    schedule: scheduleData
+  };
+
+  fetch("save_trip.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("✅ 行程已成功儲存！");
+      loadTripHistory();
+    } else {
+      alert("❌ 儲存失敗：" + data.error);
+    }
+  })
+  .catch(err => {
+    alert("❌ 錯誤：" + err.message);
+  });
+}
+
+function clearItinerary() {
+  if (!confirm("你確定要清除所有行程嗎？")) return;
+  for (let day = 1; day <= 3; day++) {
+    scheduleData[day] = [];
+  }
+  renderItinerary();
+}
+
+function loadTripHistory() {
+  fetch("get_trips.php")
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById("history-list");
+      container.innerHTML = "";
+
+      if (data.success && data.trips.length > 0) {
+        data.trips.forEach(trip => {
+          const div = document.createElement("div");
+          div.className = "border p-2 mb-2";
+          let daysHTML = "";
+          for (const day in trip.schedule) {
+            const items = trip.schedule[day]
+              .map(p => `<li>${p.name} (${p.category})</li>`)
+              .join('');
+            daysHTML += `<strong>第${day}天：</strong><ul>${items}</ul>`;
+          }
+          div.innerHTML = `<h5>${trip.name}</h5>${daysHTML}`;
+          container.appendChild(div);
+        });
+      } else {
+        container.innerHTML = "<p class='text-muted'>尚無歷史紀錄</p>";
+      }
+    })
+    .catch(err => {
+      alert("❌ 載入歷史紀錄錯誤：" + err.message);
+    });
+}
+
+window.onload = function () {
+  initMap();
+  renderItinerary();
+  loadTripHistory();
+};
+</script>
+
+</body>
+</html>

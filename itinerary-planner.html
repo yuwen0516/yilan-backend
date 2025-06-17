@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宜蘭行程規劃</title>
+    <!-- 載入 Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 載入 Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    
+    <style>
+        /* 行程規劃頁面樣式 */
+        /* 主色系 */
+        :root {
+            --orange: #ff9800;
+            --orange-dark: #e65100;
+            --orange-light: #ffcc80;
+            --orange-pale: #fff3e0;
+            --gray-light: #f8f9fa;
+            --gray-border: #e0e0e0;
+            --text-dark: #333333;
+        }
+        
+        /* 區塊樣式 */
+        .section-header {
+            background-color: var(--orange);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 4px 4px 0 0;
+        }
+        
+        .section-header h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .section-body {
+            background-color: white;
+            padding: 15px;
+            border: 1px solid var(--gray-border);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .basic-info-section .section-body {
+            border-radius: 4px;
+            border: 1px solid var(--gray-border);
+        }
+        
+        /* 表單樣式 */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .form-control, .form-select {
+            border: 1px solid var(--gray-border);
+            border-radius: 4px;
+            padding: 8px 12px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--orange);
+            box-shadow: 0 0 0 0.2rem rgba(255, 152, 0, 0.25);
+        }
+        
+        /* 按鈕樣式 */
+        .btn-orange {
+            background-color: var(--orange);
+            color: white;
+            border: none;
+        }
+        
+        .btn-orange:hover {
+            background-color: var(--orange-dark);
+            color: white;
+        }
+        
+        .btn-add {
+            background-color: var(--orange);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-weight: 500;
+        }
+        
+        .btn-add:hover {
+            background-color: var(--orange-dark);
+            color: white;
+        }
+        
+        .btn-outline-orange {
+            color: var(--orange);
+            background-color: white;
+            border: 1px solid var(--orange);
+        }
+        
+        .btn-outline-orange:hover {
+            background-color: var(--orange-pale);
+        }
+        
+        /* 行程標籤頁 */
+        .day-tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: var(--gray-light);
+            border-bottom: 1px solid var(--gray-border);
+        }
+        
+        .day-tab {
+            padding: 12px 15px;
+            cursor: pointer;
+            position: relative;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-right: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .day-tab .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--orange);
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .day-tab.active {
+            color: var(--orange-dark);
+            background-color: white;
+            border: 1px solid var(--gray-border);
+            border-bottom-color: white;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: -1px;
+        }
+        
+        .day-tab:hover:not(.active) {
+            background-color: rgba(255, 152, 0, 0.05);
+        }
+        
+        /* 行程內容區 */
+        .day-content {
+            padding: 15px;
+            background-color: white;
+            min-height: 300px;
+        }
+        
+        .day-schedule {
+            display: none;
+        }
+        
+        .day-schedule.active {
+            display: block;
+        }
+        
+        /* 空狀態 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            margin-bottom: 5px;
+        }
+        
+        .empty-state p.small {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        /* 行程項目 */
+        .schedule-item {
+            padding: 12px 15px;
+            border-left: 3px solid var(--orange);
+            background-color: white;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .schedule-item .category-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: var(--orange-pale);
+            color: var(--orange-dark);
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-bottom: 5px;
+        }
+        
+        .schedule-item .place-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .schedule-item .note {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .schedule-item .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .schedule-item .remove-btn:hover {
+            color: #d9534f;
+        }
+        
+        /* 搜索結果 */
+        .search-results {
+            background-color: white;
+            border: 1px solid var(--gray-border);
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            position: absolute;
+            z-index: 100;
+            width: calc(100% - 30px);
+        }
+        
+        .search-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-border);
+        }
+        
+        .search-item:hover {
+            background-color: var(--orange-pale);
+        }
+        
+        .search-item:last-child {
+            border-bottom: none;
+        }
+        
+        /* 歷史記錄項目 */
+        .history-item {
+            background-color: white;
+            border: 1px solid var(--gray-border);
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        
+        .history-header {
+            background-color: var(--orange-pale);
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-title {
+            font-weight: 600;
+            color: var(--orange-dark);
+        }
+        
+        .history-date {
+            font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+        
+        .history-content {
+            padding: 15px;
+        }
+        
+        .history-places {
+            margin-bottom: 15px;
+        }
+        
+        .history-place {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            background-color: var(--gray-light);
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .history-place-category {
+            display: inline-block;
+            padding: 1px 6px;
+            background-color: var(--orange-pale);
+            color: var(--orange-dark);
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+        }
+        
+        .history-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        /* 提示訊息樣式 */
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: rgba(51, 51, 51, 0.9);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .toast-message.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* 日期標題 */
+        .day-title {
+            font-weight: 600;
+            color: var(--orange-dark);
+            margin-bottom: 8px;
+        }
+        
+        /* 日期概要 */
+        .day-summary {
+            background-color: var(--gray-light);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">宜蘭行程規劃</h2>
+        
+        <!-- 行程規劃頁面 -->
+        <div class="tab-pane fade show active" id="tours" role="tabpanel" aria-labelledby="tours-tab">
+            <div class="container p-0">
+                <!-- 行程基本資訊 -->
+                <div class="basic-info-section mb-4">
+                    <div class="section-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label">行程名稱</label>
+                                <input type="text" class="form-control" id="tour-name" placeholder="請輸入行程名稱">
+                            </div>
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                <label class="form-label">天數</label>
+                                <select class="form-select" id="tour-days">
+                                    <option value="1">1天</option>
+                                    <option value="2">2天</option>
+                                    <option value="3" selected>3天</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">人數</label>
+                                <input type="number" class="form-control" id="tour-people" min="1" value="2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 添加景點區塊 -->
+                <div class="add-place-section mb-4">
+                    <div class="section-header">
+                        <h4><i class="bi bi-plus-circle me-2"></i>添加行程景點</h4>
+                    </div>
+                    <div class="section-body">
+                        <div class="form-group mb-3">
+                            <label class="form-label">景點名稱</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="place-search" placeholder="請輸入景點名稱">
+                                <button type="button" class="btn btn-orange" id="search-btn" onclick="searchPlaces()">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                            <div id="search-results" class="search-results mt-2" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">或選擇熱門景點</label>
+                            <select class="form-select" id="popular-places" onchange="selectPopularPlace()">
+                                <option value="" selected disabled>選擇熱門景點</option>
+                                <option value="龜山島">龜山島</option>
+                                <option value="五峰旗瀑布">五峰旗瀑布</option>
+                                <option value="蘭陽博物館">蘭陽博物館</option>
+                                <option value="傳統藝術中心">傳統藝術中心</option>
+                                <option value="礁溪溫泉">礁溪溫泉</option>
+                                <option value="羅東夜市">羅東夜市</option>
+                                <option value="太平山">太平山</option>
+                                <option value="東門夜市">東門夜市</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-2 mb-md-0">
+                                <label class="form-label">安排在第幾天</label>
+                                <select class="form-select" id="place-day">
+                                    <option value="1" selected>第1天</option>
+                                    <option value="2">第2天</option>
+                                    <option value="3">第3天</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">類別</label>
+                                <select class="form-select" id="place-category">
+                                    <option value="自然景點">自然景點</option>
+                                    <option value="博物館">博物館</option>
+                                    <option value="溫泉">溫泉</option>
+                                    <option value="夜市美食">夜市美食</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">備註</label>
+                            <input type="text" class="form-control" id="place-note" placeholder="選填">
+                        </div>
+                        
+                        <button type="button" class="btn btn-add w-100" onclick="addPlaceToSchedule()">添加到行程</button>
+                    </div>
+                </div>
+                
+                <!-- 行程預覽區塊 -->
+                <div class="schedule-section mb-4">
+                    <div class="section-header">
+                        <h4><i class="bi bi-calendar3 me-2"></i>行程預覽</h4>
+                    </div>
+                    <div class="section-body p-0">
+                        <ul class="day-tabs" id="schedule-tabs">
+                            <li class="day-tab active" data-day="1" onclick="switchDay(1)">
+                                <span class="dot"></span>第1天
+                            </li>
+                            <li class="day-tab" data-day="2" onclick="switchDay(2)">
+                                <span class="dot"></span>第2天
+                            </li>
+                            <li class="day-tab" data-day="3" onclick="switchDay(3)">
+                                <span class="dot"></span>第3天
+                            </li>
+                        </ul>
+                        
+                        <div class="day-content" id="day-content">
+                            <div class="day-schedule active" id="day1-schedule">
+                                <div class="empty-state">
+                                    <i class="bi bi-calendar-plus"></i>
+                                    <p>尚未添加行程項目</p>
+                                    <p class="small">請添加景點</p>
+                                </div>
+                            </div>
+                            <div class="day-schedule" id="day2-schedule">
+                                <div class="empty-state">
+                                    <i class="bi bi-calendar-plus"></i>
+                                    <p>尚未添加行程項目</p>
+                                    <p class="small">請添加景點</p>
+                                </div>
+                            </div>
+                            <div class="day-schedule" id="day3-schedule">
+                                <div class="empty-state">
+                                    <i class="bi bi-calendar-plus"></i>
+                                    <p>尚未添加行程項目</p>
+                                    <p class="small">請添加景點</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="action-buttons p-3">
+                            <div class="row mb-2">
+                                <!-- 添加保存行程按鈕 -->
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-orange w-100" onclick="saveSchedule()">
+                                        <i class="bi bi-save me-1"></i>保存行程
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-orange w-100" onclick="clearSchedule()">
+                                        <i class="bi bi-trash me-1"></i>清空行程
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-outline-orange w-100" onclick="showHistoryModal()">
+                                        <i class="bi bi-clock-history me-1"></i>查看歷史記錄
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 歷史記錄彈窗 -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #ff9800; color: white;">
+                    <h5 class="modal-title" id="historyModalLabel"><i class="bi bi-clock-history me-2"></i>行程歷史記錄</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                   <!-- 歷史記錄彈窗 -->
+<div class="modal-body">
+    <div id="no-history-message" class="text-center py-4 text-muted" style="display: none;">
+        <i class="bi bi-inbox fs-1 mb-3 d-block"></i>
+        <p>尚無保存的行程記錄</p>
+    </div>
+
+    <div id="history-list"></div>
+</div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存成功彈窗 -->
+    <div class="modal fade" id="saveSuccessModal" tabindex="-1" aria-labelledby="saveSuccessModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #28a745; color: white;">
+                    <h5 class="modal-title" id="saveSuccessModalLabel"><i class="bi bi-check-circle me-2"></i>保存成功</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>您的行程已成功保存！</p>
+                    <p>您可以在「查看歷史記錄」中找到此行程。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">確定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入 Bootstrap JS 和相關依賴 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+    <!-- 行程規劃相關JS -->
+    <script>
+        // 宜蘭景點資料
+        var attractions = [
+            { name: "蘭陽博物館", category: "博物館" },
+            { name: "龜山島", category: "自然景點" },
+            { name: "五峰旗瀑布", category: "自然景點" },
+            { name: "太平山", category: "自然景點" },
+            { name: "傳統藝術中心", category: "博物館" },
+            { name: "礁溪溫泉", category: "溫泉" },
+            { name: "羅東夜市", category: "夜市美食" },
+            { name: "東門夜市", category: "夜市美食" },
+            { name: "冬山河親水公園", category: "自然景點" },
+            { name: "梅花湖", category: "自然景點" },
+            { name: "頭城老街", category: "其他" },
+            { name: "宜蘭酒廠", category: "其他" },
+            { name: "清水地熱", category: "自然景點" },
+            { name: "南方澳觀景台", category: "自然景點" },
+            { name: "蘇澳冷泉", category: "溫泉" },
+            { name: "佛光大學", category: "其他" },
+            { name: "兔子迷宮", category: "其他" }
+        ];
+        
+        // 行程資料儲存 - 使用var確保全局變數
+        var scheduleData = {
+            1: [], // 第1天行程
+            2: [], // 第2天行程
+            3: []  // 第3天行程
+        };
+        
+        var itemCounter = 1;
+
+        // 確保頁面加載完成後執行初始化
+        window.onload = function() {
+            loadTempSchedule();
+            loadTripHistory(); // ⬅️ 加這行
+        };
+
+        
+        // 搜尋景點
+        function searchPlaces() {
+            var searchText = document.getElementById('place-search').value.trim();
+            if (searchText.length > 0) {
+                showSearchResults(searchText);
+            }
+        }
+        
+        // 選擇熱門景點
+        function selectPopularPlace() {
+            var popularSelect = document.getElementById('popular-places');
+            var value = popularSelect.value;
+            if (value) {
+                document.getElementById('place-search').value = value;
+                // 尋找對應的景點類別
+                for (var i = 0; i < attractions.length; i++) {
+                    if (attractions[i].name === value) {
+                        document.getElementById('place-category').value = attractions[i].category;
+                        break;
+                    }
+                }
+                hideSearchResults();
+            }
+        }
+        
+        // 顯示搜尋結果
+        function showSearchResults(searchText) {
+            var searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '';
+            
+            // 過濾符合的景點
+            var filteredAttractions = [];
+            for (var i = 0; i < attractions.length; i++) {
+                if (attractions[i].name.includes(searchText)) {
+                    filteredAttractions.push(attractions[i]);
+                }
+            }
+            
+            if (filteredAttractions.length > 0) {
+                for (var i = 0; i < filteredAttractions.length; i++) {
+                    var attraction = filteredAttractions[i];
+                    var resultItem = document.createElement('div');
+                    resultItem.className = 'search-item';
+                    resultItem.textContent = attraction.name;
+                    resultItem.onclick = (function(name, category) {
+                        return function() {
+                            document.getElementById('place-search').value = name;
+                            document.getElementById('place-category').value = category;
+                            hideSearchResults();
+                        };
+                    })(attraction.name, attraction.category);
+                    searchResults.appendChild(resultItem);
+                }
+            } else {
+                var noResult = document.createElement('div');
+                noResult.className = 'search-item';
+                noResult.textContent = '沒有找到相關景點';
+                searchResults.appendChild(noResult);
+            }
+            
+            searchResults.style.display = 'block';
+        }
+        
+        // 隱藏搜尋結果
+        function hideSearchResults() {
+            var searchResults = document.getElementById('search-results');
+            if (searchResults) {
+                searchResults.style.display = 'none';
+            }
+        }
+        
+        // 切換天數標籤
+        function switchDay(day) {
+            console.log('切換到第' + day + '天');
+            // 移除所有活動狀態
+            var dayTabs = document.querySelectorAll('.day-tab');
+            var daySchedules = document.querySelectorAll('.day-schedule');
+            
+            for (var i = 0; i < dayTabs.length; i++) {
+                dayTabs[i].classList.remove('active');
+            }
+            
+            for (var i = 0; i < daySchedules.length; i++) {
+                daySchedules[i].classList.remove('active');
+            }
+            
+            // 設定當前標籤為活動狀態
+            var activeTab = document.querySelector('.day-tab[data-day="' + day + '"]');
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            var activeSchedule = document.getElementById('day' + day + '-schedule');
+            if (activeSchedule) {
+                activeSchedule.classList.add('active');
+            }
+        }
+        
+        // 添加景點到行程
+        function addPlaceToSchedule() {
+            console.log('添加景點到行程');
+            var placeName = document.getElementById('place-search').value.trim();
+            if (!placeName) {
+                alert('請輸入或選擇景點名稱');
+                return;
+            }
+            
+            var day = document.getElementById('place-day').value;
+            var category = document.getElementById('place-category').value;
+            var note = document.getElementById('place-note').value.trim();
+            
+            // 創建新行程項目
+            var newItem = {
+                id: itemCounter++,
+                name: placeName,
+                category: category,
+                note: note
+            };
+            
+            // 添加到行程數據
+            scheduleData[day].push(newItem);
+            
+            // 更新顯示
+            updateScheduleDisplay(day);
+            
+            // 清空輸入
+            document.getElementById('place-search').value = '';
+            document.getElementById('place-note').value = '';
+            document.getElementById('popular-places').selectedIndex = 0;
+            
+            // 顯示提示
+            showToast('已將 ' + placeName + ' 添加到第' + day + '天行程');
+            
+            // 切換到對應的標籤頁
+            switchDay(day);
+            
+            // 自動保存行程
+            autoSaveSchedule();
+        }
+        
+        // 更新行程顯示
+        function updateScheduleDisplay(day) {
+            var scheduleContainer = document.getElementById('day' + day + '-schedule');
+            var items = scheduleData[day];
+            
+            if (items.length === 0) {
+                scheduleContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-calendar-plus"></i>
+                        <p>尚未添加行程項目</p>
+                        <p class="small">請添加景點</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                html += `
+                    <div class="schedule-item" data-id="${item.id}">
+                        <button class="remove-btn" onclick="removeScheduleItem(${item.id}, ${day})">
+                            <i class="bi bi-x-circle"></i>
+                            </button>
+                        <div class="category-tag">${item.category}</div>
+                        <div class="place-name">${item.name}</div>
+                        ${item.note ? `<div class="note">${item.note}</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            scheduleContainer.innerHTML = html;
+        }
+        
+        // 移除行程項目
+        function removeScheduleItem(itemId, day) {
+            console.log('移除項目：', itemId, '天數：', day);
+            // 從數據中移除項目
+            var newItems = [];
+            for (var i = 0; i < scheduleData[day].length; i++) {
+                if (scheduleData[day][i].id !== itemId) {
+                    newItems.push(scheduleData[day][i]);
+                }
+            }
+            scheduleData[day] = newItems;
+            
+            // 更新顯示
+            updateScheduleDisplay(day);
+            
+            // 顯示提示
+            showToast('已移除行程項目');
+            
+            // 自動保存行程
+            autoSaveSchedule();
+        }
+        
+        // 清空行程
+        function clearSchedule() {
+            if (confirm('確定要清空所有行程嗎？')) {
+                // 重置所有行程數據
+                for (var day = 1; day <= 3; day++) {
+                    scheduleData[day] = [];
+                    updateScheduleDisplay(day);
+                }
+                
+                // 清除臨時保存的行程
+                localStorage.removeItem('tempTourSchedule');
+                
+                // 顯示提示
+                showToast('已清空所有行程');
+            }
+        }
+        
+        // 保存行程功能
+        function saveSchedule() {
+            // 檢查是否有行程項目
+            var hasItems = false;
+            var totalPlaces = 0;
+            
+            for (var day in scheduleData) {
+                if (scheduleData[day].length > 0) {
+                    hasItems = true;
+                    totalPlaces += scheduleData[day].length;
+                    break;
+                }
+            }
+            
+            if (!hasItems) {
+                alert('請先添加景點到行程中');
+                return;
+            }
+            
+            // 取得行程名稱，如果沒有設定就自動生成一個
+            var tourName = document.getElementById('tour-name').value.trim();
+            if (!tourName) {
+                tourName = '宜蘭' + totalPlaces + '景點遊';
+                document.getElementById('tour-name').value = tourName;
+            }
+            
+            // 取得行程天數和人數
+            var tourDays = document.getElementById('tour-days').value;
+            var tourPeople = document.getElementById('tour-people').value;
+            
+            // 創建行程記錄
+            var tourRecord = {
+                id: Date.now(),
+                name: tourName,
+                days: tourDays,
+                people: tourPeople,
+                date: new Date().toISOString(),
+                schedule: JSON.parse(JSON.stringify(scheduleData)) // 深拷貝
+            };
+            
+            // 從 localStorage 讀取已有的行程記錄
+            var historyRecords = [];
+            var savedRecords = localStorage.getItem('tourHistory');
+            if (savedRecords) {
+                try {
+                    historyRecords = JSON.parse(savedRecords);
+                    if (!Array.isArray(historyRecords)) {
+                        historyRecords = [];
+                    }
+                } catch (e) {
+                    console.error('讀取歷史記錄失敗:', e);
+                    historyRecords = [];
+                }
+            }
+            
+            // 添加新行程記錄到歷史記錄中
+            historyRecords.unshift(tourRecord); // 添加到開頭
+            
+            // 保存回 localStorage
+            localStorage.setItem('tourHistory', JSON.stringify(historyRecords));
+            
+            // 保存臨時行程（這樣在重新載入頁面時還能看到當前行程）
+            localStorage.setItem('tempTourSchedule', JSON.stringify(tourRecord));
+            
+            // 顯示成功提示
+            try {
+                var successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
+                successModal.show();
+            } catch (e) {
+                console.error('顯示成功提示失敗:', e);
+                showToast('行程已成功保存');
+            }
+        }
+
+        function showHistoryModal() {
+    try {
+        var historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+        loadTripHistory(); // 這個會去抓資料
+        historyModal.show();
+    } catch (e) {
+        console.error("無法開啟歷史紀錄彈窗：", e);
+        showToast("❌ 開啟歷史紀錄失敗！");
+    }
+}
+
+        
+        // 顯示歷史記錄彈窗
+        function loadHistoryRecords() {
+    var historyList = document.getElementById('history-list');
+    var noHistoryMessage = document.getElementById('no-history-message');
+
+    // 預設先隱藏「尚無記錄」訊息
+    if (noHistoryMessage) {
+        noHistoryMessage.style.display = 'none';
+    }
+
+    // 從 localStorage 讀取歷史記錄
+    var historyRecords = localStorage.getItem('tourHistory');
+    if (historyRecords) {
+        try {
+            var records = JSON.parse(historyRecords);
+            if (records && records.length > 0) {
+                var html = '';
+                for (var i = 0; i < records.length; i++) {
+                    var record = records[i];
+                    var date = new Date(record.date);
+                    var formattedDate = date.getFullYear() + '/' + 
+                                       (date.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                                       date.getDate().toString().padStart(2, '0') + ' ' + 
+                                       date.getHours().toString().padStart(2, '0') + ':' + 
+                                       date.getMinutes().toString().padStart(2, '0');
+
+                    var totalPlaces = 0;
+                    var placesHtml = '';
+
+                    for (var day = 1; day <= 3; day++) {
+                        if (record.schedule[day] && record.schedule[day].length > 0) {
+                            totalPlaces += record.schedule[day].length;
+
+                            placesHtml += '<div class="day-summary mb-2">';
+                            placesHtml += '<div class="day-title">第' + day + '天：</div>';
+
+                            for (var j = 0; j < record.schedule[day].length; j++) {
+                                var place = record.schedule[day][j];
+                                placesHtml += `
+                                    <div class="history-place">
+                                        <div>
+                                            <span class="history-place-category">${place.category}</span>
+                                            ${place.name}
+                                        </div>
+                                        ${place.note ? `<small class="text-muted">${place.note}</small>` : ''}
+                                    </div>
+                                `;
+                            }
+
+                            placesHtml += '</div>';
+                        }
+                    }
+
+                    html += `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <div class="history-title">${record.name} (${totalPlaces}個景點)</div>
+                                <div class="history-date">${formattedDate}</div>
+                            </div>
+                            <div class="history-content">
+                                <div class="history-places">
+                                    ${placesHtml}
+                                </div>
+                                <div class="history-actions">
+                                    <button class="btn btn-sm btn-outline-orange me-2" onclick="loadHistorySchedule(${record.id})">載入行程</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteHistorySchedule(${record.id})">刪除</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                historyList.innerHTML = html;
+                return;
+            }
+        } catch (e) {
+            console.error('解析歷史記錄錯誤:', e);
+        }
+    }
+
+    // 如果沒有記錄或讀取失敗，顯示「尚無記錄」訊息
+    if (noHistoryMessage) {
+        noHistoryMessage.style.display = 'block';
+    }
+}
+
+        
+        // 載入歷史行程
+        function loadHistorySchedule(id) {
+            var historyRecords = localStorage.getItem('tourHistory');
+            if (historyRecords) {
+                try {
+                    var records = JSON.parse(historyRecords);
+                    if (records && records.length > 0) {
+                        // 尋找對應 ID 的記錄
+                        var record = records.find(function(r) { return r.id === id; });
+                        
+                        if (record) {
+                            // 設置行程名稱
+                            document.getElementById('tour-name').value = record.name;
+                            
+                            // 設置天數和人數
+                            if (record.days) {
+                                document.getElementById('tour-days').value = record.days;
+                            }
+                            
+                            if (record.people) {
+                                document.getElementById('tour-people').value = record.people;
+                            }
+                            
+                            // 載入行程數據
+                            if (record.schedule) {
+                                // 重置 itemCounter
+                                itemCounter = 1;
+                                
+                                // 清空當前行程
+                                for (var day = 1; day <= 3; day++) {
+                                    scheduleData[day] = [];
+                                }
+                                
+                                // 載入歷史行程
+                                for (var day = 1; day <= 3; day++) {
+                                    if (record.schedule[day]) {
+                                        scheduleData[day] = record.schedule[day];
+                                        
+                                        // 確保 itemCounter 比已有項目的最大 ID 更大
+                                        for (var i = 0; i < record.schedule[day].length; i++) {
+                                            var item = record.schedule[day][i];
+                                            if (item.id >= itemCounter) {
+                                                itemCounter = item.id + 1;
+                                            }
+                                        }
+                                        
+                                        // 更新顯示
+                                        updateScheduleDisplay(day);
+                                    }
+                                }
+                                
+                                // 關閉模態框
+                                var historyModal = bootstrap.Modal.getInstance(document.getElementById('historyModal'));
+                                if (historyModal) {
+                                    historyModal.hide();
+                                }
+                                
+                                // 切換到第1天標籤
+                                switchDay(1);
+                                
+                                // 顯示提示
+                                showToast('已載入歷史行程');
+                                
+                                // 自動保存到臨時行程
+                                autoSaveSchedule();
+                                
+                                return true;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('載入歷史行程錯誤:', e);
+                }
+            }
+            
+            showToast('載入行程失敗');
+            return false;
+        }
+        
+        // 刪除歷史行程
+        function deleteHistorySchedule(id) {
+            if (!confirm('確定要刪除這個行程嗎？')) {
+                return;
+            }
+            
+            var historyRecords = localStorage.getItem('tourHistory');
+            if (historyRecords) {
+                try {
+                    var records = JSON.parse(historyRecords);
+                    if (records && records.length > 0) {
+                        // 過濾掉要刪除的記錄
+                        var newRecords = records.filter(function(r) { return r.id !== id; });
+                        
+                        // 保存更新後的記錄
+                        localStorage.setItem('tourHistory', JSON.stringify(newRecords));
+                        
+                        // 重新載入歷史記錄列表
+                        loadHistoryRecords();
+                        
+                        // 顯示提示
+                        showToast('行程已刪除');
+                        
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('刪除歷史行程錯誤:', e);
+                }
+            }
+            
+            showToast('刪除行程失敗');
+            return false;
+        }
+        
+        // 自動保存行程
+        function autoSaveSchedule() {
+            // 檢查是否有行程項目
+            var hasItems = false;
+            var totalPlaces = 0;
+            
+            for (var day in scheduleData) {
+                if (scheduleData[day].length > 0) {
+                    hasItems = true;
+                    totalPlaces += scheduleData[day].length;
+                }
+            }
+            
+            if (!hasItems) {
+                return; // 沒有行程時不保存
+            }
+            
+            // 創建行程記錄
+            var tourRecord = {
+                id: Date.now(),
+                name: document.getElementById('tour-name').value || '宜蘭' + totalPlaces + '景點遊',
+                date: new Date().toISOString(),
+                schedule: JSON.parse(JSON.stringify(scheduleData)) // 深拷貝
+            };
+            
+            // 保存到臨時記錄中
+            localStorage.setItem('tempTourSchedule', JSON.stringify(tourRecord));
+        }
+        
+        // 加載臨時保存的行程
+        function loadTempSchedule() {
+            var tempSchedule = localStorage.getItem('tempTourSchedule');
+            if (tempSchedule) {
+                try {
+                    var parsedSchedule = JSON.parse(tempSchedule);
+                    
+                    // 設置行程名稱
+                    if (parsedSchedule.name) {
+                        document.getElementById('tour-name').value = parsedSchedule.name;
+                    }
+                    
+                    // 載入行程數據
+                    if (parsedSchedule.schedule) {
+                        // 更新全局的 scheduleData
+                        for (var day = 1; day <= 3; day++) {
+                            if (parsedSchedule.schedule[day]) {
+                                scheduleData[day] = parsedSchedule.schedule[day];
+                                
+                                // 確保 itemCounter 比已有項目的最大 ID 更大
+                                for (var i = 0; i < parsedSchedule.schedule[day].length; i++) {
+                                    var item = parsedSchedule.schedule[day][i];
+                                    if (item.id >= itemCounter) {
+                                        itemCounter = item.id + 1;
+                                    }
+                                }
+                                
+                                // 更新顯示
+                                updateScheduleDisplay(day);
+                            }
+                        }
+                        
+                        // 顯示提示
+                        showToast('已載入先前的行程');
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('載入行程時發生錯誤:', error);
+                    localStorage.removeItem('tempTourSchedule');
+                    return false;
+                }
+            }
+            return false;
+        }
+        
+        // 顯示提示訊息
+        function showToast(message) {
+            // 檢查是否已有提示訊息
+            var existingToast = document.querySelector('.toast-message');
+            if (existingToast) {
+                document.body.removeChild(existingToast);
+            }
+            
+            var toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 顯示提示訊息
+            setTimeout(function() {
+                toast.classList.add('show');
+            }, 10);
+            
+            // 3秒後隱藏
+            setTimeout(function() {
+                toast.classList.remove('show');
+                setTimeout(function() {
+                    if (document.body.contains(toast)) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        function saveSchedule() {
+    const tourName = document.getElementById('tour-name').value.trim();
+    const tourDays = document.getElementById('tour-days').value;
+    const tourPeople = document.getElementById('tour-people').value;
+
+    // 確認至少有一個行程
+    let hasItems = false;
+    for (const day in scheduleData) {
+        if (scheduleData[day].length > 0) {
+            hasItems = true;
+            break;
+        }
+    }
+
+    if (!tourName || !tourDays || !tourPeople || !hasItems) {
+        alert('請輸入完整的行程資訊並添加景點');
+        return;
+    }
+
+    const payload = {
+        tour_name: tourName,
+        days: parseInt(tourDays),
+        people: parseInt(tourPeople),
+        schedule: scheduleData
+    };
+
+    fetch('save_trip.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('✅ 行程已成功儲存！');
+            loadTripHistory(); // 儲存成功後刷新歷史
+        } else {
+            showToast('❌ 儲存失敗：' + data.error);
+        }
+    })
+    .catch(err => {
+        showToast('❌ 發生錯誤：' + err.message);
+    });
+}
+function loadTripHistory() {
+    fetch('get_trips.php')
+        .then(res => res.json())
+        .then(data => {
+            const historyList = document.getElementById('history-list');
+            const noHistoryMessage = document.getElementById('no-history-message');
+
+            if (!data.success || !data.trips || data.trips.length === 0) {
+                noHistoryMessage.style.display = 'block';
+                historyList.innerHTML = '';
+                return;
+            }
+
+            noHistoryMessage.style.display = 'none';
+            historyList.innerHTML = '';
+
+            data.trips.forEach(trip => {
+                const tripCard = document.createElement('div');
+                tripCard.className = 'history-item';
+
+                let dayHtml = '';
+                for (let d = 1; d <= trip.days; d++) {
+                    const places = trip.schedule[d] || [];
+                    if (places.length > 0) {
+                        dayHtml += `<div class="day-summary mb-2">
+                            <div class="day-title">第${d}天：</div>`;
+                        places.forEach(p => {
+                            dayHtml += `
+                                <div class="history-place">
+                                    <div><span class="history-place-category">${p.category}</span> ${p.name}</div>
+                                    ${p.note ? `<small class="text-muted">${p.note}</small>` : ''}
+                                </div>`;
+                        });
+                        dayHtml += '</div>';
+                    }
+                }
+
+                tripCard.innerHTML = `
+                    <div class="history-header">
+                        <div class="history-title">${trip.tour_name}</div>
+                        <div class="history-date">${trip.create_date}</div>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-places">${dayHtml}</div>
+                    </div>
+                `;
+                historyList.appendChild(tripCard);
+            });
+        })
+        .catch(err => {
+            showToast('❌ 讀取歷史記錄失敗：' + err.message);
+        });
+}
+
+    </script>
+    </body>
+</html>
